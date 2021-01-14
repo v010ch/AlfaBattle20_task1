@@ -1,46 +1,45 @@
 
 50 features
+(notebook)
+
 all grades: train_test_split(data, target, test_size=0.33, random_state=42)
 
 
 
-MLPClassifier((200, 50), learning_rate = 'adaptive', activation='logistic', verbose = True)
-0.5953267774051398
-10/10
-45min 7s
-save: fast. about 1 mb
-
-
-
-stack 3 from 4:
-no sgd: 0.5976880362486435
-no cb:  0.5952585778844509
-no rf:  0.5956223086614588
-no mpl: 0.5964598466348322
-
-
-
-SGDClassifier(loss = 'hinge', n_jobs=-1)
-0.5865266462706229
-10/10
-45.1 s
+LogisticRegression
+0.5946699083374513
+10/10  targgets used
+11min 26s
 save: fast. several kb
 
 
 
-CatBoostClassifier
-0.5975994965200297
+LinearSVC() 
+0.5954105312024772
 10/10
-2h 40min 15s
-save: fast. several mb
+11min 3s
+save: fast. several kb
 
 
 
-RandomForestClassifier
-0.5894017944849321
+SGDClassifier(loss = 'hinge', n_jobs=-1)
+0.5868694385982964
 10/10
-2h 21min 5s
-save: too long. huge: 30+gb
+47.3 s
+save: fast. several kb
 
 
 
+AdaBoostClassifier(DecisionTreeClassifier())
+0.5780519584629025
+10/10
+2h 47s
+save: unknown
+
+
+
+LinearSVC( loss = 'hinge') 
+0.5753664527754214
+10/10
+13min 44s
+save: unknown
