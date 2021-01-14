@@ -1,0 +1,46 @@
+
+50 features
+all grades: train_test_split(data, target, test_size=0.33, random_state=42)
+
+
+
+MLPClassifier((200, 50), learning_rate = 'adaptive', activation='logistic', verbose = True)
+0.5953267774051398
+10/10
+45min 7s
+save: fast. about 1 mb
+
+
+
+stack 3 from 4:
+no sgd: 0.5976880362486435
+no cb:  0.5952585778844509
+no rf:  0.5956223086614588
+no mpl: 0.5964598466348322
+
+
+
+SGDClassifier(loss = 'hinge', n_jobs=-1)
+0.5865266462706229
+10/10
+45.1 s
+save: fast. several kb
+
+
+
+CatBoostClassifier
+0.5975994965200297
+10/10
+2h 40min 15s
+save: fast. several mb
+
+
+
+RandomForestClassifier
+0.5894017944849321
+10/10
+2h 21min 5s
+save: too long. huge: 30+gb
+
+
+
