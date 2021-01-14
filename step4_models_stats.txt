@@ -5,41 +5,32 @@
 all grades: train_test_split(data, target, test_size=0.33, random_state=42)
 
 
+stack:
+no mlp: 0.648381218569892
+
+
+
 
 LogisticRegression
-0.5946699083374513
+0.64655239458089
 10/10  targgets used
-11min 26s
+8min 40s
 save: fast. several kb
 
 
 
 LinearSVC() 
-0.5954105312024772
+0.6485319754050992
 10/10
-11min 3s
+16min 34s
 save: fast. several kb
 
 
 
 SGDClassifier(loss = 'hinge', n_jobs=-1)
-0.5868694385982964
+0.6399196920731817
 10/10
-47.3 s
+53.8 s
 save: fast. several kb
 
 
-
-AdaBoostClassifier(DecisionTreeClassifier())
-0.5780519584629025
-10/10
-2h 47s
-save: unknown
-
-
-
-LinearSVC( loss = 'hinge') 
-0.5753664527754214
-10/10
-13min 44s
-save: unknown
