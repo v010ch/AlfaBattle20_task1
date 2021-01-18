@@ -30,7 +30,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score, make_scorer
 
 
-# In[3]:
+# In[71]:
 
 
 from sklearn.linear_model import SGDClassifier
@@ -40,6 +40,9 @@ from sklearn.svm import LinearSVC
 from sklearn.linear_model import LogisticRegression
 
 from catboost import CatBoostClassifier
+import lightgbm as lgb
+from lightgbm import LGBMClassifier
+import xgboost as xgb
 
 
 # In[ ]:
@@ -208,6 +211,45 @@ get_ipython().run_cell_magic('time', '', "# 81 - 8min 23s\n\n\nclf_lr = Logistic
 get_ipython().run_cell_magic('time', '', "# 81 - 17min 29s\n\nclf_lrsvc = LinearSVC(verbose = 1) # loss = ‘hinge’\nclf_lrsvc.fit(X_train[using_features], y_train)\npred_lrsvc = clf_lrsvc.predict(X_val[using_features])\nprint(len(set(pred_lrsvc)), set(pred_lrsvc))\nprint(f1_score(y_val, pred_lrsvc, average  = 'micro'))")
 
 
+# In[64]:
+
+
+get_ipython().run_cell_magic('time', '', "#81 - 5min 38s\n\nclf_lgbm = LGBMClassifier( silent = False) # loss = ‘hinge’\nclf_lgbm.fit(X_train[using_features], y_train)\npred_lgbm = clf_lgbm.predict(X_val[using_features])\nprint(len(set(pred_lgbm)), set(pred_lgbm))\nprint(f1_score(y_val, pred_lgbm, average  = 'micro'))")
+
+%%time
+
+#clf_xgb = xgb() # loss = ‘hinge’
+xgb_params = {
+    "objective": "multi:softmax",
+    "eta": 0.3,
+    "num_class": 10,
+    #"max_depth": 10,
+    "nthread": 4,
+    "eval_metric": "merror",
+    "print.every.n": 10
+    #"silent": 1
+}
+
+Dtrain = xgb.DMatrix(X_train[using_features], y_train)  
+Deval = xgb.DMatrix(X_val[using_features], y_val)
+eval_sets = [(Dtrain, 'train'), (Deval, 'eval')]
+
+
+#clf_xgb = xgb.train(X_train[using_features], y_train)
+#clf_xgb = xgb.train(eval_sets, )
+
+model = xgb.train(params_booster, Dtrain, 
+                  objective='multi:softmax',
+                  #verbose_eval=verbose_eval_, 
+                  evals=eval_sets,        
+                  early_stopping_rounds=10, 
+                  #evals_result=progress, 
+                  num_boost_round = 250)
+
+
+pred_xgb = clf_xgb.predict(X_val[using_features])
+print(len(set(pred_xgb)), set(pred_xgb))
+print(f1_score(y_val, pred_xgb, average  = 'micro'))
 # In[ ]:
 
 
@@ -355,10 +397,36 @@ get_ipython().run_cell_magic('time', '', '#81 - 27min 9s\n\nclf_lrsvc = LinearSV
 
 # ## save models
 
-# In[60]:
+# In[89]:
 
 
-get_ipython().run_cell_magic('time', '', "pickle.dump(clf_sgd_hinge, open(os.path.join(MODELS, 'clf_sgd.pkl'), 'wb'))\n#pickle.dump(clf_mlp, open(os.path.join(MODELS, 'clf_mlp.pkl'), 'wb'))\npickle.dump(clf_lr, open(os.path.join(MODELS, 'clf_lr.pkl'), 'wb'))\npickle.dump(clf_lrsvc, open(os.path.join(MODELS, 'clf_lrsvc.pkl'), 'wb'))\n#pickle.dump(clf_svc, open(os.path.join(MODELS, 'clf_svc.pkl'), 'wb'))\n#pickle.dump(clf_rf,  open(os.path.join(MODELS, 'clf_rf.pkl'),  'wb'))\n            \n#clf_cb.save_model(os.path.join(MODELS, 'clf_cb.cbm'), format='cbm')")
+get_ipython().run_cell_magic('time', '', "pickle.dump(clf_sgd_hinge, open(os.path.join(MODELS, 'clf_sgd.pkl'), 'wb'))\n#pickle.dump(clf_mlp, open(os.path.join(MODELS, 'clf_mlp.pkl'), 'wb'))\npickle.dump(clf_lr, open(os.path.join(MODELS, 'clf_lr.pkl'), 'wb'))\npickle.dump(clf_lrsvc, open(os.path.join(MODELS, 'clf_lrsvc.pkl'), 'wb'))\n#pickle.dump(clf_svc, open(os.path.join(MODELS, 'clf_svc.pkl'), 'wb'))\n#pickle.dump(clf_rf,  open(os.path.join(MODELS, 'clf_rf.pkl'),  'wb'))\n            \n#clf_cb.save_model(os.path.join(MODELS, 'clf_cb.cbm'), format='cbm')\n#lgb.save(clf_lgbm, os.path.join(MODELS, 'clf_lgbm.lgb'), num_iteration = NULL)\n#clf_lgbm.save_model(os.path.join(MODELS, 'clf_lgbm.txt'))\n\npickle.dump(clf_lgbm, open(os.path.join(MODELS, 'clf_lgbm.pkl'), 'wb'))")
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[90]:
+
+
+
+
+
+# In[91]:
+
+
+pred_lgbm = clf_lgbm2.predict(X_val[using_features])
+print(len(set(pred_lgbm)), set(pred_lgbm))
+print(f1_score(y_val, pred_lgbm, average  = 'micro'))
 
 
 # In[ ]:

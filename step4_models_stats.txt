@@ -5,10 +5,18 @@ all grades: train_test_split(data, target, test_size=0.33, random_state=42)
 
 
 stack:
-no mlp: 0.6567954839952476
+no mlp, lgbm: 0.6567954839952476
 
 stack - catboost:
-no mlp: 0.6571460534612453
+no mlp, lgbm: 0.6571460534612453
+
+
+
+LGBMClassifier
+0.662357334379857
+10/10
+5min 38s
+save: fast. several mb
 
 
 
