@@ -1,34 +1,35 @@
 
-50 features
-(notebook)
+81 features
 
 all grades: train_test_split(data, target, test_size=0.33, random_state=42)
 
 
 stack:
-no mlp: 0.648381218569892
+no mlp: 0.6567954839952476
 
-
-
-
-LogisticRegression
-0.64655239458089
-10/10  targgets used
-8min 40s
-save: fast. several kb
+stack - catboost:
+no mlp: 0.6571460534612453
 
 
 
 LinearSVC() 
-0.6485319754050992
+0.6568959885520523
 10/10
-16min 34s
+17min 29s
+save: fast. several kb
+
+
+
+LogisticRegression
+0.6552173231568481
+10/10  targgets used
+8min 23s
 save: fast. several kb
 
 
 
 SGDClassifier(loss = 'hinge', n_jobs=-1)
-0.6399196920731817
+0.6483064383936978
 10/10
 53.8 s
 save: fast. several kb

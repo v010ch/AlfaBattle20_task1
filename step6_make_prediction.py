@@ -70,6 +70,12 @@ SUBM = './submissions'
 # In[5]:
 
 
+load_dtypes = pickle.load(open(os.path.join(UTILS, 'load_dtypes.pkl'), 'rb'))
+
+
+# In[6]:
+
+
 using_features = pickle.load(open(os.path.join(DATA_OWN, 'using_features.pkl'), 'rb'))
 
 
@@ -77,7 +83,7 @@ using_features = pickle.load(open(os.path.join(DATA_OWN, 'using_features.pkl'), 
 
 
 #data = pd.read_csv(os.path.join(DATA_OWN, 'data_pred.csv'), parse_dates=['timestamp'])
-data = pd.read_csv(os.path.join(DATA_OWN, 'data_pred.csv'), usecols = using_features)
+data = pd.read_csv(os.path.join(DATA_OWN, 'data_pred.csv'),  usecols=using_features, dtype=load_dtypes)
 data.head()
 
 
@@ -154,13 +160,13 @@ pred_sgd = clf_sgd.predict(data[using_features])
 #pred_svc = clf_svc.predict(data[using_features])
 
 
-# In[14]:
+# In[12]:
 
 
 pred_lr = clf_lr.predict(data[using_features])
 
 
-# In[15]:
+# In[13]:
 
 
 pred_lrsvc = clf_lrsvc.predict(data[using_features])
@@ -195,13 +201,27 @@ get_ipython().run_cell_magic('time', '', "pred_stack = [''] * pred_sgd.shape[0]\
 # In[23]:
 
 
-subm.prediction = pred_stack
+#subm.prediction = pred_stack
 
 
-# In[26]:
+# In[14]:
 
 
-subm.to_csv(os.path.join(SUBM, 'subm_client_6diff_3stack.csv'), index = False)
+#subm.prediction = pred_sgd
+#subm.prediction = pred_lr
+subm.prediction = pred_lrsvc
+
+
+# In[15]:
+
+
+subm.to_csv(os.path.join(SUBM, 'subm_client_6diff__lt_lrsvc.csv'), index = False)
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:

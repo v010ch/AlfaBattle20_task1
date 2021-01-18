@@ -24,27 +24,6 @@ tqdm.pandas()
 
 from sklearn.preprocessing import LabelBinarizer, OneHotEncoder
 
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import train_test_split
-
-from sklearn.metrics import f1_score, make_scorer
-
-
-# In[56]:
-
-
-from sklearn.linear_model import SGDClassifier
-from sklearn.neural_network import MLPClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
-from sklearn.svm import LinearSVC
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.linear_model import LogisticRegression
-
-from catboost import CatBoostClassifier
-
 
 # In[ ]:
 
@@ -52,13 +31,7 @@ from catboost import CatBoostClassifier
 
 
 
-# In[ ]:
-
-
-
-
-
-# In[4]:
+# In[3]:
 
 
 DATA = './data'
@@ -76,14 +49,14 @@ UTILS = './utils'
 
 # ## prepare data, test / training sets
 
-# In[5]:
+# In[4]:
 
 
 data = pd.read_csv(os.path.join(DATA, 'alfabattle2_abattle_train_target.csv'), parse_dates=['timestamp'])
 data.head()
 
 
-# In[6]:
+# In[5]:
 
 
 def get_time_of_day(inp_hour):
@@ -97,25 +70,25 @@ def get_time_of_day(inp_hour):
         return 'night'
 
 
-# In[7]:
+# In[6]:
 
 
 get_ipython().run_cell_magic('time', '', "data['dom']  = data.timestamp.apply(lambda x: x.day)\ndata['dow']  = data.timestamp.apply(lambda x: x.weekday())\ndata['hour'] = data.timestamp.apply(lambda x: x.hour)\ndata['tod']  = data.hour.apply(get_time_of_day)\n\ndata.head()")
 
 
-# In[8]:
+# In[7]:
 
 
 data.keys()[4:]
 
 
+# In[8]:
+
+
+#target = data['multi_class_target']
+
+
 # In[9]:
-
-
-target = data['multi_class_target']
-
-
-# In[10]:
 
 
 #lb_dom  = LabelBinarizer().fit(data['dom'])
@@ -124,7 +97,7 @@ target = data['multi_class_target']
 #lb_tod  = LabelBinarizer().fit(data['tod'])
 
 
-# In[11]:
+# In[10]:
 
 
 #dom_features  = ['dom_'  + str(el) for el in lb_dom.classes_]
@@ -133,7 +106,7 @@ target = data['multi_class_target']
 #tod_features  = ['tod_'  + str(el) for el in lb_tod.classes_]
 
 
-# In[12]:
+# In[11]:
 
 
 #%%time
@@ -147,7 +120,7 @@ target = data['multi_class_target']
 
 # saving LabelBinarizer for using in prepare to submit part
 
-# In[13]:
+# In[12]:
 
 
 #pickle.dump(lb_dom,  open((os.path.join(UTILS, 'lb_dom.pkl')),  'wb'))
@@ -172,29 +145,42 @@ data = data.join(pd.DataFrame(tod_prep,  columns = tod_features), how='inner')
 
 
 
-# merge current data with statistics
+# ## merge current data with client statistics
 
-# In[52]:
+# In[13]:
 
 
-client_freq_targ = pd.read_csv(os.path.join(DATA_OWN, 'client_freq.csv'))
-client_diff_freq_dow = pd.read_csv(os.path.join(DATA_OWN, 'client_diff_freq_dow.csv'))
-client_diff_freq_tod = pd.read_csv(os.path.join(DATA_OWN, 'client_diff_freq_tod.csv'))
+get_ipython().run_cell_magic('time', '', "client_freq_targ = pd.read_csv(os.path.join(DATA_OWN, 'client_freq.csv'))\nclient_diff_freq_dow = pd.read_csv(os.path.join(DATA_OWN, 'client_diff_freq_dow.csv'))\nclient_diff_freq_tod = pd.read_csv(os.path.join(DATA_OWN, 'client_diff_freq_tod.csv'))")
+
+
+# In[14]:
+
+
+col = ['client_pin', 'dow']
+col.extend(['dow_'+el for el in client_diff_freq_dow.keys()[2:]])
+client_diff_freq_dow.columns = col
+
+
+col = ['client_pin', 'tod']
+col.extend(['tod_'+el for el in client_diff_freq_tod.keys()[2:]])
+client_diff_freq_tod.columns = col
+client_diff_freq_dow.keys(), client_diff_freq_tod.keys()
+
+
+# In[ ]:
+
+
+
 
 
 # In[15]:
 
 
-client_freq_targ.keys()
+data = data.merge(client_freq_targ, how= 'left', on='client_pin', validate='many_to_one')
+data.shape
 
 
 # In[16]:
-
-
-data = data.merge(client_freq_targ, how= 'left', on='client_pin', validate='many_to_one')
-
-
-# In[17]:
 
 
 #client_freq_features = ['client_freq_main_screen', 'client_freq_statement',
@@ -202,25 +188,13 @@ data = data.merge(client_freq_targ, how= 'left', on='client_pin', validate='many
 #       'client_freq_mobile_recharge', 'client_freq_phone_money_transfer',
 #       'client_freq_card2card_transfer', 'client_freq_chat',
 #       'client_freq_card_recharge', 'client_freq_invest']
-client_freq_features = client_freq_targ.keys()[1:]
+#client_freq_features = client_freq_targ.keys()[1:]
 
 
-# In[ ]:
+# In[17]:
 
 
-
-
-
-# In[ ]:
-
-
-new_df = pd.merge(A_df, B_df,  how='left', left_on='[A_c1,c2]', right_on = '[B_c1,c2]')
-
-
-# In[ ]:
-
-
-
+#data.head()
 
 
 # In[ ]:
@@ -232,13 +206,59 @@ new_df = pd.merge(A_df, B_df,  how='left', left_on='[A_c1,c2]', right_on = '[B_c
 # In[18]:
 
 
+data = pd.merge(data, client_diff_freq_dow,  how='left', left_on=['client_pin', 'dow'], right_on = ['client_pin','dow'])
+data.shape
+
+
+# In[19]:
+
+
+#data.head()
+
+
+# In[ ]:
+
+
+
+
+
+# In[20]:
+
+
+data = pd.merge(data, client_diff_freq_tod,  how='left', left_on=['client_pin', 'tod'], right_on = ['client_pin','tod'])
+data.shape
+
+
+# In[21]:
+
+
+#new_df = pd.merge(A_df, B_df,  how='left', left_on='[A_c1,c2]', right_on = '[B_c1,c2]')
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# ## merge current data with global statistics
+
+# In[22]:
+
+
 glob_diff_freq_dom  = pd.read_csv(os.path.join(DATA_OWN, 'glob_diff_freq_dom.csv'))
 glob_diff_freq_dow  = pd.read_csv(os.path.join(DATA_OWN, 'glob_diff_freq_dow.csv'))
 glob_diff_freq_hour = pd.read_csv(os.path.join(DATA_OWN, 'glob_diff_freq_hour.csv'))
 glob_diff_freq_tod  = pd.read_csv(os.path.join(DATA_OWN, 'glob_diff_freq_tod.csv'))
 
 
-# In[19]:
+# In[23]:
 
 
 glob_diff_freq_dom.columns  = ['dom_'  + el for el in glob_diff_freq_dom.keys()]
@@ -247,7 +267,7 @@ glob_diff_freq_hour.columns = ['hour_' + el for el in glob_diff_freq_hour.keys()
 glob_diff_freq_tod.columns  = ['tod_'  + el for el in glob_diff_freq_tod.keys()]
 
 
-# In[20]:
+# In[24]:
 
 
 glob_diff_freq_dom = glob_diff_freq_dom.rename(  columns={'dom_dom': 'dom'})
@@ -258,7 +278,7 @@ glob_diff_freq_tod = glob_diff_freq_tod.rename(  columns={'tod_tod': 'tod'})
 #glob_freq_dom.keys(), glob_freq_dow.keys(), glob_freq_hour.keys(), glob_freq_tod.keys(), 
 
 
-# In[21]:
+# In[25]:
 
 
 dom_diff_freq_features  = [el for el in glob_diff_freq_dom.keys()[1:]]
@@ -279,46 +299,34 @@ tod_diff_freq_features  = [el for el in glob_diff_freq_tod.keys()[1:]]
 
 
 
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[22]:
+# In[26]:
 
 
 data.shape
 
 
-# In[23]:
+# In[27]:
 
 
 data = data.merge(glob_diff_freq_dom, how= 'left', on='dom', validate='many_to_one')
 data.shape
 
 
-# In[24]:
+# In[28]:
 
 
 data = data.merge(glob_diff_freq_dow, how= 'left', on='dow', validate='many_to_one')
 data.shape
 
 
-# In[25]:
+# In[29]:
 
 
 data = data.merge(glob_diff_freq_hour, how= 'left', on='hour', validate='many_to_one')
 data.shape
 
 
-# In[26]:
+# In[30]:
 
 
 data = data.merge(glob_diff_freq_tod, how= 'left', on='tod', validate='many_to_one')
@@ -337,18 +345,75 @@ data.shape
 
 
 
-# In[27]:
+# ### Add last known target
+
+# In[31]:
+
+
+last_target = pd.read_csv(os.path.join(DATA_OWN, 'last_target_begore.csv'), parse_dates=['timestamp'])
+last_target.drop('Unnamed: 0', axis = 1, inplace = True)
+
+
+# In[32]:
+
+
+get_ipython().run_cell_magic('time', '', "data = data.merge(last_target, how= 'left', on=['client_pin', 'timestamp'], validate='one_to_one')\n#last_target_begore")
+
+
+# In[33]:
+
+
+get_ipython().run_cell_magic('time', '', "lb_last_target  = LabelBinarizer().fit(data['last_target_begore'])\nlast_targetdom_features  = ['lt_' + str(el) for el in lb_last_target.classes_]\nlt_prep = lb_last_target.transform(data['last_target_begore'])\ndata = data.join(pd.DataFrame(lt_prep,  columns = last_targetdom_features), how='inner')\ndata.drop('last_target_begore', axis = 1, inplace = True)")
+
+
+# In[34]:
+
+
+data.head()
+
+
+# In[35]:
+
+
+pickle.dump(lb_last_target, open(os.path.join(UTILS, 'lb_last_target.pkl'), 'wb'))
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
 
 
 data.sample(10)
 
 
-# In[28]:
-
-
-get_ipython().run_cell_magic('time', '', 'X_train, X_val, y_train, y_val = train_test_split(data, target, test_size=0.33, random_state=42)\nX_train.shape, X_val.shape, y_train.shape, y_val.shape')
-
-
 # In[ ]:
 
 
@@ -361,15 +426,13 @@ get_ipython().run_cell_magic('time', '', 'X_train, X_val, y_train, y_val = train
 
 
 
-# In[43]:
+# In[ ]:
 
 
 #f1 = make_scorer(f1_score , average='macro')
 
 
-# In[61]:
-
-
+# ### create using features list
 using_features = []
 using_features.extend(client_freq_features)
 using_features.extend(dom_diff_freq_features)
@@ -378,6 +441,12 @@ using_features.extend(hour_diff_freq_features)
 using_features.extend(tod_diff_freq_features)
 
 print(len(using_features), using_features)
+# In[36]:
+
+
+using_features = data.keys()[8:]
+print(len(using_features))
+#print(using_features)
 
 
 # In[ ]:
@@ -386,146 +455,18 @@ print(len(using_features), using_features)
 
 
 
-# ## check classifiers with check time of work
-SGDClassifier
-MLPClassifier
-KNeighborsClassifier
-SVC
-RandomForestClassifier, AdaBoostClassifier
-GaussianNB
-# In[ ]:
+# ## saving
 
+# In[38]:
 
 
+get_ipython().run_cell_magic('time', '', "data.to_csv(os.path.join(DATA_OWN, 'data_train.csv'))")
 
 
-# In[ ]:
+# In[39]:
 
 
-#clf_sgd_log   = SGDClassifier(loss = 'log', class_weight='balanced', n_jobs=-1)
-
-#clf_knn  = KNeighborsClassifier()
-#clf_svc  = SVC()
-clf_gaus = GaussianNB()
-
-
-# In[47]:
-
-
-get_ipython().run_cell_magic('time', '', "#clf_sgd_hinge = SGDClassifier(loss = 'hinge', class_weight='balanced', n_jobs=-1)\nclf_sgd_hinge = SGDClassifier(loss = 'hinge', n_jobs=-1)\nclf_sgd_hinge.fit(X_train[using_features], y_train)\npred_sgd_hinge = clf_sgd_hinge.predict(X_val[using_features])\nprint(len(set(pred_sgd_hinge)), set(pred_sgd_hinge))\nprint(f1_score(y_val, pred_sgd_hinge, average  = 'micro'))")
-
-
-# In[ ]:
-
-
-get_ipython().run_cell_magic('time', '', "#clf_sgd_perc  = SGDClassifier(loss = 'perceptron', class_weight='balanced', n_jobs=-1)\nclf_sgd_perc  = SGDClassifier(loss = 'perceptron', n_jobs=-1)\nclf_sgd_perc.fit(X_train[using_features], y_train)\npred_sgd_perc = clf_sgd_perc.predict(X_val[using_features])\nprint(len(set(pred_sgd_perc)), set(pred_sgd_perc))\nprint(f1_score(y_val, pred_sgd_perc, average  = 'micro'))")
-
-
-# In[ ]:
-
-
-get_ipython().run_cell_magic('time', '', "# 9 min\n\nclf_mlp  = MLPClassifier((200, 50), learning_rate = 'adaptive', activation='logistic', verbose = True)\nclf_mlp.fit(X_train[using_features], y_train)\npred_mlp = clf_mlp.predict(X_val[using_features])\nprint(set(pred_mlp))\nprint(f1_score(y_val, pred_mlp, average  = 'micro'))")
-
-
-# In[ ]:
-
-
-get_ipython().run_cell_magic('time', '', "# TOOO LONG\n\n#clf_knn.fit(X_train[using_features], y_train)\n#pred_knn = clf_knn.predict(X_val[using_features])\n#print(set(pred_knn))\n#print(f1_score(y_val, pred_knn, average  = 'micro'))")
-
-
-# In[ ]:
-
-
-get_ipython().run_cell_magic('time', '', "# TOOO LONG\n\n#clf_svc.fit(X_train[using_features], y_train)\n#pred_svc = clf_svc.predict(X_val[using_features])\n#print(set(pred_svc))\n#print(f1_score(y_val, pred_svc, average  = 'micro'))")
-
-
-# In[ ]:
-
-
-get_ipython().run_cell_magic('time', '', "# 24 min\n\nclf_rf   = RandomForestClassifier(n_jobs = -1, verbose = 1) \nclf_rf.fit(X_train[using_features], y_train)\npred_rf = clf_rf.predict(X_val[using_features])\nprint(set(pred_rf))\nprint(f1_score(y_val, pred_rf, average  = 'micro'))")
-
-
-# In[ ]:
-
-
-get_ipython().run_cell_magic('time', '', "clf_gaus.fit(X_train[using_features], y_train)\npred_gaus = clf_gaus.predict(X_val[using_features])\nprint(set(pred_gaus))\nprint(f1_score(y_val, pred_gaus, average  = 'micro'))")
-
-
-# In[51]:
-
-
-get_ipython().run_cell_magic('time', '', "\n\nadaboost_inp_clf = DecisionTreeClassifier()\nclf_ab   = AdaBoostClassifier(adaboost_inp_clf)\nclf_ab.fit(X_train[using_features], y_train)\npred_ab = clf_ab.predict(X_val[using_features])\nprint(len(set(pred_ab)), set(pred_ab))\nprint(f1_score(y_val, pred_ab, average  = 'micro'))")
-
-
-# In[55]:
-
-
-get_ipython().run_cell_magic('time', '', "\nclf_lr = LogisticRegression(n_jobs = -1, verbose = 1)\nclf_lr.fit(X_train[using_features], y_train)\npred_lr = clf_lr.predict(X_val[using_features])\nprint(len(set(pred_lr)), set(pred_lr))\nprint(f1_score(y_val, pred_lr, average  = 'micro'))")
-
-
-# In[64]:
-
-
-print(len(set(pred_lr)), set(pred_lr))
-
-
-# In[57]:
-
-
-get_ipython().run_cell_magic('time', '', "\nclf_lrsvc = LinearSVC() # loss = ‘hinge’\nclf_lrsvc.fit(X_train[using_features], y_train)\npred_lrsvc = clf_lrsvc.predict(X_val[using_features])\nprint(len(set(pred_lrsvc)), set(pred_lrsvc))\nprint(f1_score(y_val, pred_lrsvc, average  = 'micro'))")
-
-
-# In[60]:
-
-
-get_ipython().run_cell_magic('time', '', "\nclf_lrsvc_hinge = LinearSVC( loss = 'hinge')\nclf_lrsvc_hinge.fit(X_train[using_features], y_train)\npred_lrsvc_hinge = clf_lrsvc_hinge.predict(X_val[using_features])\nprint(len(set(pred_lrsvc_hinge)), set(pred_lrsvc_hinge))\nprint(f1_score(y_val, pred_lrsvc_hinge, average  = 'micro'))")
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-get_ipython().run_cell_magic('time', '', "clf_cb = CatBoostClassifier()\nclf_cb.fit(X_train[using_features], y_train)\npred_cb = clf_cb.predict(X_val[using_features])\n#print(set(pred_cb))\nprint(f1_score(y_val, pred_cb, average  = 'micro'))")
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-pred_list = [pred_sgd, pred_mlp, pred_knn, pred_svc, pred_rf, pred_ab, pred_gaus, pred_cb]
-
-
-# In[ ]:
-
-
-#for el in itertools.permutations(pred_list):
-#    pred_all = []
-#    pred_all = []
-
-
-# In[ ]:
-
-
-def set_pred(idx):
-    
-    return Counter(                    pred_sgd[idx],                    pred_mlp[idx],                    pred_knn[idx],                    pred_svc[idx],                    pred_rf[idx],                    pred_ab[idx],                    pred_gaus[idx],                    pred_cb[idx],                   ).most_common()[0][0]
-
-
-# In[ ]:
-
-
-pred_all = [set_pred(el) for el in range(len(y_val))]
-print(f1_score(y_val, pred_all, average  = 'micro'))
+get_ipython().run_cell_magic('time', '', "pickle.dump(using_features, open(os.path.join(DATA_OWN, 'using_features.pkl'), 'wb'))")
 
 
 # In[ ]:
@@ -540,67 +481,130 @@ print(f1_score(y_val, pred_all, average  = 'micro'))
 
 
 
+# #### Set dtypes for reduse mem usage
+
+# In[40]:
+
+
+get_ipython().run_cell_magic('time', '', "using_features = pickle.load(open(os.path.join(DATA_OWN, 'using_features.pkl'), 'rb'))")
+
+
+# In[45]:
+
+
+print("{")
+for el in using_features:
+    if el.startswith('lt'):
+        print("'" + el + "': np.int8,")
+    else:
+        print("'" + el + "': np.float32, # np.int8,")
+print("}")
+
+
+# In[43]:
+
+
+load_dtypes = {
+'client_freq_main_screen': np.float32, # np.int8,
+'client_freq_statement': np.float32, # np.int8,
+'client_freq_credit_info': np.float32, # np.int8,
+'client_freq_own_transfer': np.float32, # np.int8,
+'client_freq_mobile_recharge': np.float32, # np.int8,
+'client_freq_phone_money_transfer': np.float32, # np.int8,
+'client_freq_card2card_transfer': np.float32, # np.int8,
+'client_freq_chat': np.float32, # np.int8,
+'client_freq_card_recharge': np.float32, # np.int8,
+'client_freq_invest': np.float32, # np.int8,
+'dow_diff_client_freq_main_screen': np.float32, # np.int8,
+'dow_diff_client_freq_statement': np.float32, # np.int8,
+'dow_diff_client_freq_credit_info': np.float32, # np.int8,
+'dow_diff_client_freq_own_transfer': np.float32, # np.int8,
+'dow_diff_client_freq_mobile_recharge': np.float32, # np.int8,
+'dow_diff_client_freq_phone_money_transfer': np.float32, # np.int8,
+'dow_diff_client_freq_card2card_transfer': np.float32, # np.int8,
+'dow_diff_client_freq_chat': np.float32, # np.int8,
+'dow_diff_client_freq_card_recharge': np.float32, # np.int8,
+'dow_diff_client_freq_invest': np.float32, # np.int8,
+'tod_diff_client_freq_main_screen': np.float32, # np.int8,
+'tod_diff_client_freq_statement': np.float32, # np.int8,
+'tod_diff_client_freq_credit_info': np.float32, # np.int8,
+'tod_diff_client_freq_own_transfer': np.float32, # np.int8,
+'tod_diff_client_freq_mobile_recharge': np.float32, # np.int8,
+'tod_diff_client_freq_phone_money_transfer': np.float32, # np.int8,
+'tod_diff_client_freq_card2card_transfer': np.float32, # np.int8,
+'tod_diff_client_freq_chat': np.float32, # np.int8,
+'tod_diff_client_freq_card_recharge': np.float32, # np.int8,
+'tod_diff_client_freq_invest': np.float32, # np.int8,
+'dom_diff_glob_freq_main_screen': np.float32, # np.int8,
+'dom_diff_glob_freq_statement': np.float32, # np.int8,
+'dom_diff_glob_freq_credit_info': np.float32, # np.int8,
+'dom_diff_glob_freq_own_transfer': np.float32, # np.int8,
+'dom_diff_glob_freq_mobile_recharge': np.float32, # np.int8,
+'dom_diff_glob_freq_phone_money_transfer': np.float32, # np.int8,
+'dom_diff_glob_freq_card2card_transfer': np.float32, # np.int8,
+'dom_diff_glob_freq_chat': np.float32, # np.int8,
+'dom_diff_glob_freq_card_recharge': np.float32, # np.int8,
+'dom_diff_glob_freq_invest': np.float32, # np.int8,
+'dow_diff_glob_freq_main_screen': np.float32, # np.int8,
+'dow_diff_glob_freq_statement': np.float32, # np.int8,
+'dow_diff_glob_freq_credit_info': np.float32, # np.int8,
+'dow_diff_glob_freq_own_transfer': np.float32, # np.int8,
+'dow_diff_glob_freq_mobile_recharge': np.float32, # np.int8,
+'dow_diff_glob_freq_phone_money_transfer': np.float32, # np.int8,
+'dow_diff_glob_freq_card2card_transfer': np.float32, # np.int8,
+'dow_diff_glob_freq_chat': np.float32, # np.int8,
+'dow_diff_glob_freq_card_recharge': np.float32, # np.int8,
+'dow_diff_glob_freq_invest': np.float32, # np.int8,
+'hour_diff_glob_freq_main_screen': np.float32, # np.int8,
+'hour_diff_glob_freq_statement': np.float32, # np.int8,
+'hour_diff_glob_freq_credit_info': np.float32, # np.int8,
+'hour_diff_glob_freq_own_transfer': np.float32, # np.int8,
+'hour_diff_glob_freq_mobile_recharge': np.float32, # np.int8,
+'hour_diff_glob_freq_phone_money_transfer': np.float32, # np.int8,
+'hour_diff_glob_freq_card2card_transfer': np.float32, # np.int8,
+'hour_diff_glob_freq_chat': np.float32, # np.int8,
+'hour_diff_glob_freq_card_recharge': np.float32, # np.int8,
+'hour_diff_glob_freq_invest': np.float32, # np.int8,
+'tod_diff_glob_freq_main_screen': np.float32, # np.int8,
+'tod_diff_glob_freq_statement': np.float32, # np.int8,
+'tod_diff_glob_freq_credit_info': np.float32, # np.int8,
+'tod_diff_glob_freq_own_transfer': np.float32, # np.int8,
+'tod_diff_glob_freq_mobile_recharge': np.float32, # np.int8,
+'tod_diff_glob_freq_phone_money_transfer': np.float32, # np.int8,
+'tod_diff_glob_freq_card2card_transfer': np.float32, # np.int8,
+'tod_diff_glob_freq_chat': np.float32, # np.int8,
+'tod_diff_glob_freq_card_recharge': np.float32, # np.int8,
+'tod_diff_glob_freq_invest': np.float32, # np.int8,
+'lt_card2card_transfer': np.int8,
+'lt_card_recharge': np.int8,
+'lt_chat': np.int8,
+'lt_credit_info': np.int8,
+'lt_first_appear': np.int8,
+'lt_invest': np.int8,
+'lt_main_screen': np.int8,
+'lt_mobile_recharge': np.int8,
+'lt_own_transfer': np.int8,
+'lt_phone_money_transfer': np.int8,
+'lt_statement': np.int8,
+}
+
+
+# In[44]:
+
+
+pickle.dump(load_dtypes, open(os.path.join(UTILE, 'load_dtypes.pkl'), 'wb'))
+
+
+# In[ ]:
+
+
+#load_dtypes = pickle.load(open(os.path.join(UTILS, 'load_dtypes.pkl'), 'rb'))
+
+
 # In[ ]:
 
 
 
-
-
-# ## classifiers GridSearch
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# ## study best models on full data
-
-# In[ ]:
-
-
-clf_sgd = SGDClassifier(loss = 'hinge', n_jobs=-1)
-#clf_sgd_log   = SGDClassifier(loss = 'log', n_jobs=-1)
-#clf_sgd  = SGDClassifier(loss = 'perceptron', n_jobs=-1)
-
-clf_mlp  = MLPClassifier()
-#clf_knn  = KNeighborsClassifier()
-clf_svc  = SVC()
-clf_rf   = RandomForestClassifier() 
-clf_ab   = AdaBoostClassifier()
-clf_gaus = GaussianNB()
-
-
-# In[ ]:
-
-
-get_ipython().run_cell_magic('time', '', 'clf_sgd.fit(data[using_features], target)')
-
-
-# ## save models
-
-# In[68]:
-
-
-get_ipython().run_cell_magic('time', '', "#pickle.dump(clf_sgd, open(os.path.join(MODELS, 'clf_sgd.pkl'), 'wb'))\n#pickle.dump(clf_mlp, open(os.path.join(MODELS, 'clf_mlp.pkl'), 'wb'))\n#pickle.dump(clf_knn, open(os.path.join(MODELS, 'clf_knn.pkl'), 'wb'))\n#pickle.dump(clf_lr, open(os.path.join(MODELS, 'clf_lr.pkl'), 'wb'))\npickle.dump(clf_lrsvc, open(os.path.join(MODELS, 'clf_lrsvc.pkl'), 'wb'))\n#pickle.dump(clf_svc, open(os.path.join(MODELS, 'clf_svc.pkl'), 'wb'))\n#pickle.dump(clf_rf,  open(os.path.join(MODELS, 'clf_rf.pkl'),  'wb'))\n#pickle.dump(clf_ab,  open(os.path.join(MODELS, 'clf_ab.pkl'),  'wb'))\n#pickle.dump(clf_gaus,open(os.path.join(MODELS, 'clf_gaus.pkl'),'wb'))\n            \n#clf_cb.save_model(os.path.join(MODELS, 'clf_cb.cbm'), format='cbm')")
 
 
 # In[ ]:

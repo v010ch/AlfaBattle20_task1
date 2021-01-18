@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
+# In[1]:
 
 
 import os
@@ -19,7 +19,7 @@ from tqdm import tqdm
 tqdm.pandas()
 
 
-# In[3]:
+# In[2]:
 
 
 from sklearn.preprocessing import LabelBinarizer, OneHotEncoder
@@ -30,7 +30,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score, make_scorer
 
 
-# In[4]:
+# In[3]:
 
 
 from sklearn.linear_model import SGDClassifier
@@ -54,7 +54,7 @@ from catboost import CatBoostClassifier
 
 
 
-# In[5]:
+# In[4]:
 
 
 DATA = './data'
@@ -75,31 +75,14 @@ UTILS = './utils'
 # In[6]:
 
 
-get_ipython().run_cell_magic('time', '', "data_train = pd.read_csv(os.path.join(DATA_OWN, 'data_train.csv'), parse_dates=['timestamp'])\ndata_train.head()")
+load_dtypes = pickle.load(open(os.path.join(UTILS, 'load_dtypes.pkl'), 'rb'))
 
 
 # In[7]:
-
-
-(data_train.isnull().values.any())
-
-
-# In[7]:
-
-
-target = data_train.multi_class_target
-
-
-# In[10]:
-
-
-get_ipython().run_cell_magic('time', '', 'X_train, X_val, y_train, y_val = train_test_split(data_train, target, test_size=0.33, random_state=42)\nX_train.shape, X_val.shape, y_train.shape, y_val.shape')
-
-
-# In[11]:
 
 
 using_features = pickle.load(open(os.path.join(DATA_OWN, 'using_features.pkl'), 'rb'))
+len(using_features)
 
 
 # In[ ]:
@@ -108,7 +91,58 @@ using_features = pickle.load(open(os.path.join(DATA_OWN, 'using_features.pkl'), 
 
 
 
-# In[43]:
+# In[13]:
+
+
+load_col = list(using_features)
+load_col.extend(['multi_class_target'])
+
+
+# In[ ]:
+
+
+
+
+
+# In[15]:
+
+
+get_ipython().run_cell_magic('time', '', "#data_train = pd.read_csv(os.path.join(DATA_OWN, 'data_train.csv'), parse_dates=['timestamp'], usecols=using_features, dtype=load_dtypes)\ndata_train = pd.read_csv(os.path.join(DATA_OWN, 'data_train.csv'), usecols=load_col, dtype=load_dtypes)\ndata_train.head()")
+
+
+# In[16]:
+
+
+(data_train.isnull().values.any())
+
+
+# In[17]:
+
+
+target = data_train.multi_class_target
+data_train.drop('multi_class_target', axis = 1, inplace = True)
+
+
+# In[18]:
+
+
+get_ipython().run_cell_magic('time', '', 'X_train, X_val, y_train, y_val = train_test_split(data_train, target, test_size=0.33, random_state=42)\nX_train.shape, X_val.shape, y_train.shape, y_val.shape')
+
+
+# In[19]:
+
+
+#using_features = pickle.load(open(os.path.join(DATA_OWN, 'using_features.pkl'), 'rb'))
+#len(using_features)
+
+
+# In[ ]:
+
+
+
+
+
+# In[20]:
 
 
 #f1 = make_scorer(f1_score , average='macro')
@@ -128,7 +162,7 @@ using_features = pickle.load(open(os.path.join(DATA_OWN, 'using_features.pkl'), 
 
 
 
-# In[ ]:
+# In[21]:
 
 
 #clf_sgd_log   = SGDClassifier(loss = 'log', class_weight='balanced', n_jobs=-1)
@@ -138,7 +172,7 @@ using_features = pickle.load(open(os.path.join(DATA_OWN, 'using_features.pkl'), 
 #clf_gaus = GaussianNB()
 
 
-# In[12]:
+# In[22]:
 
 
 get_ipython().run_cell_magic('time', '', "#clf_sgd_hinge = SGDClassifier(loss = 'hinge', class_weight='balanced', n_jobs=-1)\nclf_sgd_hinge = SGDClassifier(loss = 'hinge', n_jobs=-1)\nclf_sgd_hinge.fit(X_train[using_features], y_train)\npred_sgd_hinge = clf_sgd_hinge.predict(X_val[using_features])\nprint(len(set(pred_sgd_hinge)), set(pred_sgd_hinge))\nprint(f1_score(y_val, pred_sgd_hinge, average  = 'micro'))")
@@ -159,80 +193,19 @@ get_ipython().run_cell_magic('time', '', "#clf_sgd_hinge = SGDClassifier(loss = 
 # In[ ]:
 
 
-get_ipython().run_cell_magic('time', '', "# 9 min\n\nclf_mlp  = MLPClassifier((200, 50), learning_rate = 'adaptive', activation='logistic', verbose = True)\nclf_mlp.fit(X_train[using_features], y_train)\npred_mlp = clf_mlp.predict(X_val[using_features])\nprint(set(pred_mlp))\nprint(f1_score(y_val, pred_mlp, average  = 'micro'))")
+get_ipython().run_cell_magic('time', '', "# 9 min\n# \n\nclf_mlp  = MLPClassifier((200, 50), learning_rate = 'adaptive', activation='logistic', verbose = True)\nclf_mlp.fit(X_train[using_features], y_train)\npred_mlp = clf_mlp.predict(X_val[using_features])\nprint(len(set(pred_mlp)), set(pred_mlp))\nprint(f1_score(y_val, pred_mlp, average  = 'micro'))")
 
 
-# In[ ]:
+# In[23]:
 
 
-#%%time
-# TOOO LONG
-
-#clf_svc.fit(X_train[using_features], y_train)
-#pred_svc = clf_svc.predict(X_val[using_features])
-#print(set(pred_svc))
-#print(f1_score(y_val, pred_svc, average  = 'micro'))
+get_ipython().run_cell_magic('time', '', "# 81 - 8min 23s\n\n\nclf_lr = LogisticRegression(n_jobs = -1, verbose = 1) #‘liblinear’,\nclf_lr.fit(X_train[using_features], y_train)\npred_lr = clf_lr.predict(X_val[using_features])\nprint(len(set(pred_lr)), set(pred_lr))\nprint(f1_score(y_val, pred_lr, average  = 'micro'))")
 
 
-# In[ ]:
+# In[24]:
 
 
-#%%time
-# 24 min
-#
-#clf_rf   = RandomForestClassifier(n_jobs = -1, verbose = 1) 
-#clf_rf.fit(X_train[using_features], y_train)
-#pred_rf = clf_rf.predict(X_val[using_features])
-#print(set(pred_rf))
-#print(f1_score(y_val, pred_rf, average  = 'micro'))
-
-
-# In[ ]:
-
-
-#%%time
-#clf_gaus.fit(X_train[using_features], y_train)
-#pred_gaus = clf_gaus.predict(X_val[using_features])
-#print(set(pred_gaus))
-#print(f1_score(y_val, pred_gaus, average  = 'micro'))
-
-
-# In[15]:
-
-
-#%%time
-#
-#
-#adaboost_inp_clf = DecisionTreeClassifier()
-#clf_ab   = AdaBoostClassifier(adaboost_inp_clf)
-#clf_ab.fit(X_train[using_features], y_train)
-#pred_ab = clf_ab.predict(X_val[using_features])
-#rint(len(set(pred_ab)), set(pred_ab))
-#print(f1_score(y_val, pred_ab, average  = 'micro'))
-
-
-# In[13]:
-
-
-get_ipython().run_cell_magic('time', '', "\nclf_lr = LogisticRegression(n_jobs = -1, verbose = 1) #‘liblinear’,\nclf_lr.fit(X_train[using_features], y_train)\npred_lr = clf_lr.predict(X_val[using_features])\nprint(len(set(pred_lr)), set(pred_lr))\nprint(f1_score(y_val, pred_lr, average  = 'micro'))")
-
-
-# In[14]:
-
-
-get_ipython().run_cell_magic('time', '', "\nclf_lrsvc = LinearSVC(verbose = 1) # loss = ‘hinge’\nclf_lrsvc.fit(X_train[using_features], y_train)\npred_lrsvc = clf_lrsvc.predict(X_val[using_features])\nprint(len(set(pred_lrsvc)), set(pred_lrsvc))\nprint(f1_score(y_val, pred_lrsvc, average  = 'micro'))")
-
-
-# In[1]:
-
-
-#%%time
-#
-#clf_lrsvc_hinge = LinearSVC( loss = 'hinge')
-#clf_lrsvc_hinge.fit(X_train[using_features], y_train)
-#pred_lrsvc_hinge = clf_lrsvc_hinge.predict(X_val[using_features])
-#print(len(set(pred_lrsvc_hinge)), set(pred_lrsvc_hinge))
-#print(f1_score(y_val, pred_lrsvc_hinge, average  = 'micro'))
+get_ipython().run_cell_magic('time', '', "# 81 - 17min 29s\n\nclf_lrsvc = LinearSVC(verbose = 1) # loss = ‘hinge’\nclf_lrsvc.fit(X_train[using_features], y_train)\npred_lrsvc = clf_lrsvc.predict(X_val[using_features])\nprint(len(set(pred_lrsvc)), set(pred_lrsvc))\nprint(f1_score(y_val, pred_lrsvc, average  = 'micro'))")
 
 
 # In[ ]:
@@ -260,28 +233,48 @@ get_ipython().run_cell_magic('time', '', "\nclf_lrsvc = LinearSVC(verbose = 1) #
 
 # ### saw how many give us stack
 
-# In[19]:
+# In[41]:
 
 
-get_ipython().run_cell_magic('time', '', "pred_stack = [''] * pred_sgd_hinge.shape[0]\nfor idx in range(pred_sgd_hinge.shape[0]):\n    cnt = Counter([\n                   pred_sgd_hinge[idx], \n                   #pred_mlp[idx], \n                   pred_lr[idx], \n                   pred_lrsvc[idx]\n               ]).most_common()\n    pred_stack[idx] = cnt[0][0]\n    \n    if cnt[0][0] == cnt[1][0]:\n        print('terrible!')")
+get_ipython().run_cell_magic('time', '', "pred_stack = [''] * pred_sgd_hinge.shape[0]\ncollisions = 0\nfor idx in range(pred_sgd_hinge.shape[0]):\n    cnt = Counter([\n                   pred_sgd_hinge[idx], \n                   #pred_mlp[idx], \n                   pred_lr[idx], \n                   pred_lrsvc[idx]\n               ]).most_common()\n    pred_stack[idx] = cnt[0][0]\n    \n    if len(cnt) > 1 and cnt[0][1] == cnt[1][1]:\n        collisions += 1\n    #    print('terrible!')\n    #    print(cnt[0], cnt[1])")
 
 
-# In[21]:
+# In[42]:
 
 
-print(f1_score(y_val, pred_stack, average  = 'micro'))
+print(f1_score(y_val, pred_stack, average  = 'micro'), (collisions/pred_sgd_hinge.shape[0]))
+
+
+# In[48]:
+
+
+stack_df = pd.DataFrame({'SGD':pred_sgd_hinge, 'logit':pred_lr, 'linear_svc':pred_lrsvc})
+cat_ftrs = ['SGD', 'logit', 'linear_svc']
+
+
+# In[54]:
+
+
+#cb_stack = CatBoostClassifier(loss_function='Logloss', cat_features=cat_ftrs)
+cb_stack = CatBoostClassifier(cat_features=cat_ftrs)
+cb_stack.fit(stack_df, y_val)
+pred_stack_cb = cb_stack.predict(X_val[using_features])
+print(len(set(pred_stack_cb)), set(pred_stack_cb))
+print(f1_score(y_val, pred_stack_cb, average  = 'micro'))
+
+
+# In[59]:
+
+
+pred_stack_cb = cb_stack.predict(stack_df)
+print(len(set(pred_stack_cb[:, 0])), set(pred_stack_cb[:, 0]))
+print(f1_score(y_val, pred_stack_cb[:, 0], average  = 'micro'))
 
 
 # In[ ]:
 
 
-
-
-
-# In[ ]:
-
-
-
+#dataset = cb.Pool(X, y, cat_features=['d'])
 
 
 # In[ ]:
@@ -324,7 +317,7 @@ print(f1_score(y_val, pred_stack, average  = 'micro'))
 
 
 
-# In[23]:
+# In[43]:
 
 
 get_ipython().run_cell_magic('time', '', "clf_sgd_hinge = SGDClassifier(loss = 'hinge', n_jobs=-1)\nclf_sgd_hinge.fit(data_train[using_features], target)")
@@ -336,16 +329,16 @@ get_ipython().run_cell_magic('time', '', "clf_sgd_hinge = SGDClassifier(loss = '
 get_ipython().run_cell_magic('time', '', "clf_mlp  = MLPClassifier((200, 50), learning_rate = 'adaptive', activation='logistic', verbose = True)\nclf_mlp.fit(data_train[using_features], target)")
 
 
-# In[24]:
+# In[44]:
 
 
-get_ipython().run_cell_magic('time', '', 'clf_lr = LogisticRegression(n_jobs = -1, verbose = 1)\nclf_lr.fit(data_train[using_features], target)')
+get_ipython().run_cell_magic('time', '', '# 81 - 13min 29s\n\nclf_lr = LogisticRegression(n_jobs = -1, verbose = 2)\nclf_lr.fit(data_train[using_features], target)')
 
 
-# In[25]:
+# In[45]:
 
 
-get_ipython().run_cell_magic('time', '', 'clf_lrsvc = LinearSVC(verbose = True) # loss = ‘hinge’\nclf_lrsvc.fit(data_train[using_features], target)')
+get_ipython().run_cell_magic('time', '', '#81 - 27min 9s\n\nclf_lrsvc = LinearSVC(verbose = True) # loss = ‘hinge’\nclf_lrsvc.fit(data_train[using_features], target)')
 
 
 # In[ ]:
@@ -362,7 +355,7 @@ get_ipython().run_cell_magic('time', '', 'clf_lrsvc = LinearSVC(verbose = True) 
 
 # ## save models
 
-# In[26]:
+# In[60]:
 
 
 get_ipython().run_cell_magic('time', '', "pickle.dump(clf_sgd_hinge, open(os.path.join(MODELS, 'clf_sgd.pkl'), 'wb'))\n#pickle.dump(clf_mlp, open(os.path.join(MODELS, 'clf_mlp.pkl'), 'wb'))\npickle.dump(clf_lr, open(os.path.join(MODELS, 'clf_lr.pkl'), 'wb'))\npickle.dump(clf_lrsvc, open(os.path.join(MODELS, 'clf_lrsvc.pkl'), 'wb'))\n#pickle.dump(clf_svc, open(os.path.join(MODELS, 'clf_svc.pkl'), 'wb'))\n#pickle.dump(clf_rf,  open(os.path.join(MODELS, 'clf_rf.pkl'),  'wb'))\n            \n#clf_cb.save_model(os.path.join(MODELS, 'clf_cb.cbm'), format='cbm')")
