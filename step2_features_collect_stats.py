@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[2]:
 
 
 import os
@@ -17,13 +17,13 @@ import pickle
 #import dask
 
 
-# In[2]:
+# In[3]:
 
 
 get_ipython().run_line_magic('pylab', 'inline')
 
 
-# In[3]:
+# In[4]:
 
 
 DATA = './data'
@@ -488,17 +488,17 @@ invest                    57078
 
 
 # when we get features below we should get them for test and train data    
-# for thaqt we concat this dataframes
+# for that we concat this dataframes
 
-# In[56]:
+# In[8]:
 
 
-get_ipython().run_cell_magic('time', '', "data_train = pd.read_csv(os.path.join(DATA, 'alfabattle2_abattle_train_target.csv'), parse_dates=['timestamp'])#.sort_values(by = ['timestamp'])\ndata_test = pd.read_csv(os.path.join(DATA, 'alfabattle2_prediction_session_timestamp.csv'), parse_dates=['timestamp'])#.sort_values(by = ['timestamp'])\ndata = pd.concat([data_train, data_test])\ndata.sort_values(by = ['timestamp'], inplace = True)\n\ndata.reset_index(inplace = True)\ndata.drop('index', axis = 1, inplace = True)\ndata.index.name = 'ind'\n#data.head()\ndata.tail()")
+get_ipython().run_cell_magic('time', '', "# 1min 7s\n\ndata_train = pd.read_csv(os.path.join(DATA, 'alfabattle2_abattle_train_target.csv'), parse_dates=['timestamp'])#.sort_values(by = ['timestamp'])\ndata_test = pd.read_csv(os.path.join(DATA, 'alfabattle2_prediction_session_timestamp.csv'), parse_dates=['timestamp'])#.sort_values(by = ['timestamp'])\ndata = pd.concat([data_train, data_test])\ndata.sort_values(by = ['timestamp'], inplace = True)\n\ndata.reset_index(inplace = True)\ndata.drop('index', axis = 1, inplace = True)\ndata.index.name = 'ind'\n\ndata['time_diff'] = data.groupby(['client_pin']).timestamp.diff()#.agg('size')\ndata['time_diff'] = data.time_diff.apply(lambda x: x.total_seconds() / 3600)\ndata['time_diff'].fillna(0, inplace = True)\n\n#data.head()\ndata.tail()")
 
 
 # ## get last target before this session
 
-# In[57]:
+# In[9]:
 
 
 def last_target(inp_ser):
@@ -591,7 +591,7 @@ gc.collect()
 
 
 
-# In[ ]:
+# In[19]:
 
 
 target_dict = {'main_screen': 0, 
@@ -613,11 +613,13 @@ def target_time_diff(inp_data):
     #ret_series = pd.Series([[0]]*inp_data.shape[0]
     #                       , index = inp_data.index)
     ret_series = pd.Series(['']*inp_data.shape[0]
-                           , index = inp_data.index
+                           #, index = inp_data.index
+                           , index = inp_data.timestamp
                            , dtype = 'object'
                           )
     last_known = [0] * len(target_dict)
     #last_known = np.array([0] * len(target_dict))
+    data_len = (inp_data.shape[0] - 1)
     
     #print(ret_series.dtype)
     for idx, val in enumerate(inp_data.index):
@@ -629,7 +631,8 @@ def target_time_diff(inp_data):
         #ret_series.iloc[idx] = np.array(last_known, dtype = object)
         ret_series.iloc[idx] = ' '.join([str(el) for el in last_known])
         #update last known time:
-        last_known[target_dict[field]] = 0
+        if idx < data_len:
+            last_known[target_dict[field]] = 0
             
     #print(ret_series.shape)
     
@@ -653,102 +656,183 @@ first = data.query('client_pin == @gg1 or client_pin == @gg2 or client_pin == @g
 
 
 
-# In[ ]:
+# In[20]:
 
 
-get_ipython().run_cell_magic('time', '', "# 34min 39s\n#tt = first.apply(target_time_diff)\n\ntime_past_data = data.groupby('client_pin').progress_apply(target_time_diff)\ntime_past_data = time_past_data.reset_index()\ntime_past_data.columns = ['client_pin', 'merge_index', 'last_for_all_sessions']")
+get_ipython().run_cell_magic('time', '', "# 34min 39s\n# 37min 13s\n#tt = first.apply(target_time_diff)\n\ntime_past_data = data.groupby('client_pin').progress_apply(target_time_diff)\ntime_past_data = time_past_data.reset_index()\ntime_past_data.columns = ['client_pin', 'timestamp', 'last_for_all_sessions']")
 
 
-# In[ ]:
+# In[23]:
 
 
-get_ipython().run_cell_magic('time', '', "# 9.73 s\n# 7.72 s\n\n#pickle.dump(time_past_data, open(os.path.join(DATA_OWN, 'time_past_no_processing.pkl'), 'wb'))\ntime_past_data = pickle.load(open(os.path.join(DATA_OWN, 'time_past_no_processing.pkl'), 'rb'))   ")
 
-
-# In[ ]:
-
-
-get_ipython().run_cell_magic('time', '', "time_past_data['last_for_all_sessions_split'] = time_past_data.last_for_all_sessions.apply(lambda x: x.split())\n\nfor el in target_dict.keys():\n    #print(el)\n    time_past_data['time_past_last_' + el] = time_past_data['last_for_all_sessions_split'].apply(lambda x: round(float(x[target_dict[el]]), 4))\n    ")
 
 
 # In[ ]:
 
 
-#time_past_data.drop('last_for_all_sessions', axis = 1, inplace = True)
-#time_past_data.drop('last_for_all_sessions_split', axis = 1, inplace = True)
-time_past_data
 
 
-# In[ ]:
+
+# In[25]:
+
+
+get_ipython().run_cell_magic('time', '', "# 9.73 s\n# 7.72 s\n\n#pickle.dump(time_past_data, open(os.path.join(DATA_OWN, 'time_past_no_processing.pkl'), 'wb'))\n#time_past_data = pickle.load(open(os.path.join(DATA_OWN, 'time_past_no_processing.pkl'), 'rb'))   ")
+
+
+# In[27]:
+
+
+get_ipython().run_cell_magic('time', '', "1min 18s\n\ntime_past_data['last_for_all_sessions_split'] = time_past_data.last_for_all_sessions.apply(lambda x: x.split())\n\nfor el in target_dict.keys():\n    #print(el)\n    time_past_data['time_past_last_' + el] = time_past_data['last_for_all_sessions_split'].apply(lambda x: round(float(x[target_dict[el]]), 4))\n    ")
+
+
+# In[30]:
+
+
+time_past_data.drop('last_for_all_sessions', axis = 1, inplace = True)
+time_past_data.drop('last_for_all_sessions_split', axis = 1, inplace = True)
+time_past_data.head()
+
+
+# In[31]:
 
 
 get_ipython().run_cell_magic('time', '', "time_past_data.to_csv(os.path.join(DATA_OWN, 'time_past_last_target.csv'))\n#time_past_data = pd.read_csv(os.path.join(DATA_OWN, 'time_past_last_target.csv'))")
 
 
-# In[ ]:
+# ### Average time between targets
+
+# In[46]:
 
 
-average time between targets
+data = data.merge(time_past_data, how='left', on=['client_pin', 'timestamp'], validate='one_to_one')
 
 
-# In[ ]:
-
-
-
-
-
-# In[ ]:
+# In[33]:
 
 
 target_dict.keys()
 
 
-# In[ ]:
+# In[48]:
 
 
-def client_used_target(inp_series, targ):
+data.keys()
+
+
+# In[60]:
+
+
+def target_hours_past_mean_v2(inp_data, targ):
     
-    #print(inp_series.shape)
-    #print(inp_series.values)
-    #print(inp1)
-    #print(inp_series.unique())
-    #print(len(inp_series.unique()))
-    if targ in inp_series.unique():
-        return 1
+    if targ in inp_data.multi_class_target.unique():
+        return np.mean(inp_data['time_past_last_' + targ])
     else:
         return 0
 
 
+# In[62]:
+
+
+#data.groupby('client_pin').apply(target_hours_past_mean_v2, targ = 'main_screen')
+
+
+# In[66]:
+
+
+get_ipython().run_cell_magic('time', '', "\nclient_used_target_df = pd.DataFrame({'client_pin':data.client_pin.unique()},)#index = data.client_pin.unique())\nfor el in tqdm(target_dict.keys()):\n    tmp_df = data.groupby('client_pin').apply(target_hours_past_mean_v2, targ = el)\n    tmp_df.name = 'mean_' + el\n    client_used_target_df = client_used_target_df.merge( tmp_df, how='left', on='client_pin', \n                                                        validate='one_to_one')\n\ndel tmp_df\ngc.collect()")
+
+
+# In[68]:
+
+
+client_used_target_df.head()
+
+
+# In[69]:
+
+
+get_ipython().run_cell_magic('time', '', "\nclient_used_target_df.to_csv(os.path.join(DATA_OWN, 'client_target_time_mean.csv'))\n#client_used_target_df = pd.read_csv(os.path.join(DATA_OWN, 'client_target_time_mean.csv'))")
+
+
+# ### relations between target past time and target average time
+
+# In[89]:
+
+
+data = data.merge(client_used_target_df, how='left', on='client_pin', validate='many_to_one')
+
+
 # In[ ]:
 
 
+del client_used_target_df
+gc.collect()
 
+
+# In[95]:
+
+
+def set_relations(inp_data, targ):
+    
+    #global client_used_target_df
+    #print(inp_data.shape)
+    if inp_data['mean_' + targ] == 0:
+        return 0
+    else:
+        return (inp_data['time_past_last_' + targ] / inp_data['mean_' + targ])
+
+
+# In[96]:
+
+
+data.keys()
+
+
+# In[100]:
+
+
+get_ipython().run_cell_magic('time', '', "\nfor el in (target_dict.keys()):\n    data['relations_time_past_targ_' + el] = data.progress_apply(lambda x: set_relations(x, targ = el), axis = 1 )")
+
+
+# In[102]:
+
+
+data.head()
+
+
+# In[108]:
+
+
+data.keys()
+
+
+# In[109]:
+
+
+for el in data.keys():
+    if el.startswith('mean') or el.startswith('time_'):
+        data.drop(el, inplace = True, axis = 1)
+
+
+# In[114]:
+
+
+#data.drop('multi_class_target', inplace = True, axis = 1)
+data.drop('session_id', inplace = True, axis = 1)
+
+
+# In[118]:
+
+
+data.to_csv(os.path.join(DATA_OWN, 'relations_time_past_targ.csv'))
 
 
 # In[ ]:
 
 
-get_ipython().run_cell_magic('time', '', "\nclient_used_target_df = pd.DataFrame(index = data.client_pin.unique())\nfor el in target_dict.keys():\n    tmp_df = data.groupby('client_pin').multi_class_target.agg(client_used_target, targ=el)\n    tmp_df.name = 'has_' + el\n    client_used_target_df = client_used_target_df.merge( tmp_df, how='left', left_index=True, \n                                                        right_index=True, validate='one_to_one')\n")
-
-
-# In[ ]:
-
-
-client_used_target_df
-
-
-# In[ ]:
-
-
-#client_used_target_df.to_csv(os.path.join(DATA_OWN, 'client_used_target.csv'))
-
-client_used_target_df = pd.read_csv(os.path.join(DATA_OWN, 'client_used_target.csv'))
-
-
-# In[ ]:
-
-
-
+del data
+gc.collect()
 
 
 # In[ ]:

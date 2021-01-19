@@ -161,7 +161,7 @@ data_pred = pd.merge(data_pred, client_diff_freq_tod,  how='left', left_on=['cli
 print(data_pred.isnull().values.any())
 
 
-# In[36]:
+# In[16]:
 
 
 del client_freq_targ
@@ -170,7 +170,7 @@ del client_diff_freq_tod
 gc.collect()
 
 
-# In[16]:
+# In[17]:
 
 
 #is_NaN = data_pred.isnull()
@@ -180,14 +180,14 @@ gc.collect()
 #print(rows_with_NaN)
 
 
-# In[17]:
+# In[18]:
 
 
 data_pred.fillna(0, inplace = True)
 data_pred.isnull().values.any()
 
 
-# In[18]:
+# In[19]:
 
 
 client_freq_features = ['client_freq_main_screen', 'client_freq_statement',
@@ -197,7 +197,7 @@ client_freq_features = ['client_freq_main_screen', 'client_freq_statement',
        'client_freq_card_recharge', 'client_freq_invest']
 
 
-# In[19]:
+# In[20]:
 
 
 glob_diff_freq_dom  = pd.read_csv(os.path.join(DATA_OWN, 'glob_diff_freq_dom.csv'))
@@ -206,7 +206,7 @@ glob_diff_freq_hour = pd.read_csv(os.path.join(DATA_OWN, 'glob_diff_freq_hour.cs
 glob_diff_freq_tod  = pd.read_csv(os.path.join(DATA_OWN, 'glob_diff_freq_tod.csv'))
 
 
-# In[20]:
+# In[21]:
 
 
 glob_diff_freq_dom.columns  = ['dom_'  + el for el in glob_diff_freq_dom.keys()]
@@ -215,7 +215,7 @@ glob_diff_freq_hour.columns = ['hour_' + el for el in glob_diff_freq_hour.keys()
 glob_diff_freq_tod.columns  = ['tod_'  + el for el in glob_diff_freq_tod.keys()]
 
 
-# In[21]:
+# In[22]:
 
 
 glob_diff_freq_dom = glob_diff_freq_dom.rename(  columns={'dom_dom': 'dom'})
@@ -226,7 +226,7 @@ glob_diff_freq_tod = glob_diff_freq_tod.rename(  columns={'tod_tod': 'tod'})
 #glob_freq_dom.keys(), glob_freq_dow.keys(), glob_freq_hour.keys(), glob_freq_tod.keys(), 
 
 
-# In[22]:
+# In[23]:
 
 
 dom_diff_freq_features  = [el for el in glob_diff_freq_dom.keys()[1:]]
@@ -241,13 +241,13 @@ tod_diff_freq_features  = [el for el in glob_diff_freq_tod.keys()[1:]]
 
 
 
-# In[23]:
+# In[24]:
 
 
 data_pred.shape
 
 
-# In[24]:
+# In[25]:
 
 
 data_pred = data_pred.merge(glob_diff_freq_dom, how= 'left', on='dom', validate='many_to_one')
@@ -257,13 +257,13 @@ data_pred = data_pred.merge(glob_diff_freq_tod, how= 'left', on='tod', validate=
 data_pred.shape
 
 
-# In[25]:
+# In[26]:
 
 
 data_pred.isnull().values.any()
 
 
-# In[37]:
+# In[27]:
 
 
 del glob_diff_freq_dom 
@@ -281,20 +281,20 @@ gc.collect()
 
 # ## last target
 
-# In[26]:
+# In[28]:
 
 
 last_target = pd.read_csv(os.path.join(DATA_OWN, 'last_target_begore.csv'), parse_dates=['timestamp'])
 last_target.drop('Unnamed: 0', axis = 1, inplace = True)
 
 
-# In[27]:
+# In[29]:
 
 
 last_target.head()
 
 
-# In[29]:
+# In[30]:
 
 
 get_ipython().run_cell_magic('time', '', "data_pred = data_pred.merge(last_target, how= 'left', on=['client_pin', 'timestamp'], validate='one_to_one')\n#last_target_begore")
@@ -310,7 +310,7 @@ data_pred = data_pred.join(pd.DataFrame(lt_prep,  columns = last_targetdom_featu
 data_pred.drop('last_target_begore', axis = 1, inplace = True)
 
 
-# In[38]:
+# In[32]:
 
 
 del last_target
@@ -324,19 +324,35 @@ gc.collect()
 
 
 
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
+# ### ADD relations time spend past target was
 
 # In[33]:
+
+
+data_relations = pd.read_csv(os.path.join(DATA_OWN, 'relations_time_past_targ.csv'), parse_dates=['timestamp'])
+data_relations.drop('Unnamed: 0', inplace = True, axis = 1)
+
+
+# In[36]:
+
+
+data_pred = data_pred.merge(data_relations, how= 'left', on=['client_pin', 'timestamp'], validate='one_to_one')
+
+
+# In[37]:
+
+
+del data_relations
+gc.collect()
+
+
+# In[ ]:
+
+
+
+
+
+# In[38]:
 
 
 data_pred.isnull().values.any()
@@ -344,7 +360,7 @@ data_pred.isnull().values.any()
 
 # ## saving 
 
-# In[34]:
+# In[39]:
 
 
 get_ipython().run_cell_magic('time', '', "data_pred.to_csv(os.path.join(DATA_OWN, 'data_pred.csv'))")
@@ -356,22 +372,10 @@ get_ipython().run_cell_magic('time', '', "data_pred.to_csv(os.path.join(DATA_OWN
 
 
 
-# In[ ]:
+# In[40]:
 
 
 using_features = pickle.load(open(os.path.join(DATA_OWN, 'using_features.pkl'), 'rb'))
-
-
-# In[ ]:
-
-
-clf_sgd = pickle.load(open(os.path.join(MODELS, 'clf_sgd.pkl'), 'rb'))
-
-
-# In[ ]:
-
-
-pred_sgd = clf_sgd.predict(data_pred[using_features])
 
 
 # In[ ]:
@@ -391,6 +395,12 @@ data_pred.fillna(0, inplace = True)
 
 del data_pred
 gc.collect()
+
+
+# In[ ]:
+
+
+
 
 
 # In[ ]:

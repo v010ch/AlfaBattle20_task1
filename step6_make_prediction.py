@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[16]:
+# In[1]:
 
 
 import os
@@ -18,7 +18,7 @@ from tqdm import tqdm
 tqdm.pandas()
 
 
-# In[17]:
+# In[2]:
 
 
 from sklearn.preprocessing import LabelBinarizer, OneHotEncoder
@@ -29,7 +29,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score, make_scorer
 
 
-# In[18]:
+# In[3]:
 
 
 from sklearn.linear_model import SGDClassifier
@@ -48,7 +48,7 @@ from catboost import CatBoostClassifier
 
 
 
-# In[19]:
+# In[4]:
 
 
 DATA = './data'
@@ -67,19 +67,19 @@ SUBM = './submissions'
 
 # # load data / submit / features
 
-# In[20]:
+# In[5]:
 
 
 load_dtypes = pickle.load(open(os.path.join(UTILS, 'load_dtypes.pkl'), 'rb'))
 
 
-# In[21]:
+# In[6]:
 
 
 using_features = pickle.load(open(os.path.join(DATA_OWN, 'using_features.pkl'), 'rb'))
 
 
-# In[22]:
+# In[7]:
 
 
 #data = pd.read_csv(os.path.join(DATA_OWN, 'data_pred.csv'), parse_dates=['timestamp'])
@@ -87,7 +87,7 @@ data = pd.read_csv(os.path.join(DATA_OWN, 'data_pred.csv'),  usecols=using_featu
 data.head()
 
 
-# In[23]:
+# In[8]:
 
 
 if data.isnull().values.any() == True:
@@ -101,7 +101,7 @@ if data.isnull().values.any() == True:
 
 
 
-# In[24]:
+# In[9]:
 
 
 subm = pd.read_csv(os.path.join(DATA, 'alfabattle2_abattle_sample_prediction.csv'))
@@ -116,15 +116,15 @@ subm.head()
 
 # # load models
 
-# In[25]:
+# In[12]:
 
 
-clf_sgd = pickle.load(open(os.path.join(MODELS, 'clf_sgd.pkl'), 'rb'))
-#clf_mlp = pickle.load(os.paht.join(MODELS, 'clf_mlp.pkl'))
-clf_lr = pickle.load(open(os.path.join(MODELS, 'clf_lr.pkl'), 'rb'))
-clf_lrsvc = pickle.load(open(os.path.join(MODELS, 'clf_lrsvc.pkl'), 'rb'))
+#clf_sgd = pickle.load(open(os.path.join(MODELS, 'clf_sgd.pkl'), 'rb'))
+clf_mlp = pickle.load(open(os.path.join(MODELS, 'clf_mlp.pkl'), 'rb'))
+#clf_lr = pickle.load(open(os.path.join(MODELS, 'clf_lr.pkl'), 'rb'))
+#clf_lrsvc = pickle.load(open(os.path.join(MODELS, 'clf_lrsvc.pkl'), 'rb'))
 #clf_svc = pickle.load(os.paht.join(MODELS, 'clf_svc.pkl'))
-clf_lgbm = pickle.load(open(os.path.join(MODELS, 'clf_lgbm.pkl'), 'rb'))
+#clf_lgbm = pickle.load(open(os.path.join(MODELS, 'clf_lgbm.pkl'), 'rb'))
 
 #clf_cb  = cb.load_model(os.paht.join(MODELS, 'clf_cb.cbm'), format='cbm')
 
@@ -146,13 +146,13 @@ clf_lgbm = pickle.load(open(os.path.join(MODELS, 'clf_lgbm.pkl'), 'rb'))
 # In[11]:
 
 
-pred_sgd = clf_sgd.predict(data[using_features])
+#pred_sgd = clf_sgd.predict(data[using_features])
 
 
-# In[12]:
+# In[13]:
 
 
-#pred_mlp = clf_mlp.predict(data[using_features])
+pred_mlp = clf_mlp.predict(data[using_features])
 
 
 # In[13]:
@@ -164,19 +164,19 @@ pred_sgd = clf_sgd.predict(data[using_features])
 # In[12]:
 
 
-pred_lr = clf_lr.predict(data[using_features])
+#pred_lr = clf_lr.predict(data[using_features])
 
 
 # In[13]:
 
 
-pred_lrsvc = clf_lrsvc.predict(data[using_features])
+#pred_lrsvc = clf_lrsvc.predict(data[using_features])
 
 
 # In[26]:
 
 
-pred_lgbm = clf_lgbm.predict(data[using_features])
+#pred_lgbm = clf_lgbm.predict(data[using_features])
 
 
 # In[16]:
@@ -190,13 +190,20 @@ pred_lgbm = clf_lgbm.predict(data[using_features])
 
 
 
-
-# In[22]:
-
-
-get_ipython().run_cell_magic('time', '', "pred_stack = [''] * pred_sgd.shape[0]\nfor idx in range(pred_sgd.shape[0]):\n    cnt = Counter([\n                   pred_sgd[idx], \n                   #pred_mlp[idx], \n                   pred_lr[idx], \n                   pred_lrsvc[idx],\n                   pred_lgbm[idx],\n               ]).most_common()\n    pred_stack[idx] = cnt[0][0]\n    \n    #if cnt[0][0] == cnt[1][0]:\n    #    print('terrible!')")
-
-
+%%time
+pred_stack = [''] * pred_sgd.shape[0]
+for idx in range(pred_sgd.shape[0]):
+    cnt = Counter([
+                   pred_sgd[idx], 
+                   #pred_mlp[idx], 
+                   pred_lr[idx], 
+                   pred_lrsvc[idx],
+                   pred_lgbm[idx],
+               ]).most_common()
+    pred_stack[idx] = cnt[0][0]
+    
+    #if cnt[0][0] == cnt[1][0]:
+    #    print('terrible!')
 # In[ ]:
 
 
@@ -211,19 +218,20 @@ get_ipython().run_cell_magic('time', '', "pred_stack = [''] * pred_sgd.shape[0]\
 #subm.prediction = pred_stack
 
 
-# In[27]:
+# In[14]:
 
 
 #subm.prediction = pred_sgd
+subm.prediction = pred_mlp
 #subm.prediction = pred_lr
 #subm.prediction = pred_lrsvc
-subm.prediction = pred_lgbm
+#subm.prediction = pred_lgbm
 
 
-# In[28]:
+# In[15]:
 
 
-subm.to_csv(os.path.join(SUBM, 'subm_client_6diff_lt_lgbm.csv'), index = False)
+subm.to_csv(os.path.join(SUBM, 'subm_client_6diff_lt_relat_mlp.csv'), index = False)
 
 
 # In[ ]:

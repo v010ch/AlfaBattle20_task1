@@ -390,6 +390,27 @@ pickle.dump(lb_last_target, open(os.path.join(UTILS, 'lb_last_target.pkl'), 'wb'
 
 
 
+# ### ADD relations time spend past target was
+
+# In[42]:
+
+
+data_relations = pd.read_csv(os.path.join(DATA_OWN, 'relations_time_past_targ.csv'), parse_dates=['timestamp'])
+data_relations.drop('Unnamed: 0', inplace = True, axis = 1)
+
+
+# In[43]:
+
+
+data = data.merge(data_relations, how= 'left', on=['client_pin', 'timestamp'], validate='one_to_one')
+
+
+# In[ ]:
+
+
+#data_relations.head()
+
+
 # In[ ]:
 
 
@@ -402,16 +423,10 @@ pickle.dump(lb_last_target, open(os.path.join(UTILS, 'lb_last_target.pkl'), 'wb'
 
 
 
-# In[ ]:
+# In[45]:
 
 
-
-
-
-# In[ ]:
-
-
-data.sample(10)
+#data.sample(10)
 
 
 # In[ ]:
@@ -441,7 +456,7 @@ using_features.extend(hour_diff_freq_features)
 using_features.extend(tod_diff_freq_features)
 
 print(len(using_features), using_features)
-# In[36]:
+# In[46]:
 
 
 using_features = data.keys()[8:]
@@ -457,13 +472,13 @@ print(len(using_features))
 
 # ## saving
 
-# In[38]:
+# In[51]:
 
 
-get_ipython().run_cell_magic('time', '', "data.to_csv(os.path.join(DATA_OWN, 'data_train.csv'))")
+get_ipython().run_cell_magic('time', '', "#81 - 8min 57s\n#91 - 9min 14s\n\ndata.to_csv(os.path.join(DATA_OWN, 'data_train.csv'))")
 
 
-# In[39]:
+# In[52]:
 
 
 get_ipython().run_cell_magic('time', '', "pickle.dump(using_features, open(os.path.join(DATA_OWN, 'using_features.pkl'), 'wb'))")
@@ -489,7 +504,7 @@ get_ipython().run_cell_magic('time', '', "pickle.dump(using_features, open(os.pa
 get_ipython().run_cell_magic('time', '', "using_features = pickle.load(open(os.path.join(DATA_OWN, 'using_features.pkl'), 'rb'))")
 
 
-# In[45]:
+# In[47]:
 
 
 print("{")
@@ -501,7 +516,7 @@ for el in using_features:
 print("}")
 
 
-# In[43]:
+# In[48]:
 
 
 load_dtypes = {
@@ -586,13 +601,23 @@ load_dtypes = {
 'lt_own_transfer': np.int8,
 'lt_phone_money_transfer': np.int8,
 'lt_statement': np.int8,
+'relations_time_past_targ_main_screen': np.float32, # np.int8,
+'relations_time_past_targ_statement': np.float32, # np.int8,
+'relations_time_past_targ_credit_info': np.float32, # np.int8,
+'relations_time_past_targ_own_transfer': np.float32, # np.int8,
+'relations_time_past_targ_mobile_recharge': np.float32, # np.int8,
+'relations_time_past_targ_phone_money_transfer': np.float32, # np.int8,
+'relations_time_past_targ_card2card_transfer': np.float32, # np.int8,
+'relations_time_past_targ_chat': np.float32, # np.int8,
+'relations_time_past_targ_card_recharge': np.float32, # np.int8,
+'relations_time_past_targ_invest': np.float32, # np.int8,
 }
 
 
-# In[44]:
+# In[50]:
 
 
-pickle.dump(load_dtypes, open(os.path.join(UTILE, 'load_dtypes.pkl'), 'wb'))
+pickle.dump(load_dtypes, open(os.path.join(UTILS, 'load_dtypes.pkl'), 'wb'))
 
 
 # In[ ]:

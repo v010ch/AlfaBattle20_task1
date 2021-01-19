@@ -1,45 +1,48 @@
 
-81 features
+91 features
 
 all grades: train_test_split(data, target, test_size=0.33, random_state=42)
 
 
 stack:
-no mlp, lgbm: 0.6567954839952476
 
-stack - catboost:
-no mlp, lgbm: 0.6571460534612453
+
+MLPClassifier((200, 50), learning_rate = 'adaptive', activation='logistic')
+0.671169430342565
+10/10
+1h 10min 53s
+save: fast. several kb
 
 
 
 LGBMClassifier
-0.662357334379857
+0.6708703096377887
 10/10
-5min 38s
+5min 21s
 save: fast. several mb
 
 
 
 LinearSVC() 
-0.6568959885520523
+0.6572238248444872
 10/10
-17min 29s
+4h 4min 35s
 save: fast. several kb
 
 
 
 LogisticRegression
-0.6552173231568481
+0.6548661554494408
 10/10  targgets used
-8min 23s
+8min 40s
 save: fast. several kb
 
 
 
 SGDClassifier(loss = 'hinge', n_jobs=-1)
-0.6483064383936978
+0.6503009752531459
 10/10
-53.8 s
+59.1 s
 save: fast. several kb
 
 
