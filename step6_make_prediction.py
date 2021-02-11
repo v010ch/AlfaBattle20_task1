@@ -38,6 +38,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
 from sklearn.linear_model import LogisticRegression
 
+import xgboost as xgb
 import catboost as cb
 from catboost import CatBoostClassifier
 
@@ -51,12 +52,12 @@ from catboost import CatBoostClassifier
 # In[4]:
 
 
-DATA = './data'
-DATA_OWN = './data_own'
+DATA = os.path.join('.', 'data')
+DATA_OWN = os.path.join('.', 'data_own')
 CLICKSTREAM = 'alfabattle2_abattle_clickstream'
-MODELS = './models'
-UTILS = './utils'
-SUBM = './submissions'
+MODELS = os.path.join('.', 'models')
+UTILS = os.path.join('.', 'utils')
+SUBM = os.path.join('.', 'submissions')
 
 
 # In[ ]:
@@ -129,7 +130,21 @@ clf_mlp = pickle.load(open(os.path.join(MODELS, 'clf_mlp.pkl'), 'rb'))
 #clf_cb  = cb.load_model(os.paht.join(MODELS, 'clf_cb.cbm'), format='cbm')
 
 
+# In[16]:
+
+
+clf_xgb = xgb.Booster()
+clf_xgb.load_model(os.path.join(MODELS, 'clf_xgb.json'))
+target_encoder = pickle.load(open(os.path.join(UTILS, 'oe_target.pkl'), 'rb'))
+
+
 # In[ ]:
+
+
+
+
+
+# In[29]:
 
 
 
@@ -185,6 +200,18 @@ pred_mlp = clf_mlp.predict(data[using_features])
 #pred_cb = clf_cb.predict(data[using_features])
 
 
+# In[18]:
+
+
+pred_xgb_int = clf_xgb.predict(xgb.DMatrix(data[using_features]))
+
+
+# In[24]:
+
+
+pred_xgb = target_encoder.inverse_transform(pred_xgb_int.reshape(-1, 1))
+
+
 # In[ ]:
 
 
@@ -218,20 +245,21 @@ for idx in range(pred_sgd.shape[0]):
 #subm.prediction = pred_stack
 
 
-# In[14]:
+# In[26]:
 
 
 #subm.prediction = pred_sgd
-subm.prediction = pred_mlp
+#subm.prediction = pred_mlp
 #subm.prediction = pred_lr
 #subm.prediction = pred_lrsvc
 #subm.prediction = pred_lgbm
+subm.prediction = pred_xgb
 
 
-# In[15]:
+# In[27]:
 
 
-subm.to_csv(os.path.join(SUBM, 'subm_client_6diff_lt_relat_mlp.csv'), index = False)
+subm.to_csv(os.path.join(SUBM, 'subm_client_6diff_lt_relat_xgb.csv'), index = False)
 
 
 # In[ ]:

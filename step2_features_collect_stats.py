@@ -26,9 +26,12 @@ get_ipython().run_line_magic('pylab', 'inline')
 # In[4]:
 
 
-DATA = './data'
-DATA_OWN = './data_own'
+DATA = os.path.join('.', 'data')
+DATA_OWN = os.path.join('.', 'data_own')
 CLICKSTREAM = 'alfabattle2_abattle_clickstream'
+MODELS = os.path.join('.', 'models')
+UTILS = os.path.join('.', 'utils')
+SUBM = os.path.join('.', 'submissions')
 
 
 # In[ ]:

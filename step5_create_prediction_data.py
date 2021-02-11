@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
+# In[ ]:
 
 
 import os
@@ -18,21 +18,21 @@ from tqdm import tqdm
 tqdm.pandas()
 
 
-# In[3]:
+# In[ ]:
 
 
 import catboost as cb
 
 
-# In[4]:
+# In[ ]:
 
 
-DATA = './data'
-DATA_OWN = './data_own'
+DATA = os.path.join('.', 'data')
+DATA_OWN = os.path.join('.', 'data_own')
 CLICKSTREAM = 'alfabattle2_abattle_clickstream'
-MODELS = './models'
-UTILS = './utils'
-SUBM = './submissions'
+MODELS = os.path.join('.', 'models')
+UTILS = os.path.join('.', 'utils')
+SUBM = os.path.join('.', 'submissions')
 
 
 # In[ ]:

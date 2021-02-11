@@ -22,6 +22,11 @@ LGBMClassifier
 save: fast. several mb
 
 
+xgb(num_boost_round = 50)
+~0.669
+10/10
+6min 21s
+save: fast. 10+ mb
 
 LinearSVC() 
 0.6572238248444872

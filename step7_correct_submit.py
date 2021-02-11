@@ -21,12 +21,12 @@ tqdm.pandas()
 # In[33]:
 
 
-DATA = './data'
-DATA_OWN = './data_own'
+DATA = os.path.join('.', 'data')
+DATA_OWN = os.path.join('.', 'data_own')
 CLICKSTREAM = 'alfabattle2_abattle_clickstream'
-MODELS = './models'
-UTILS = './utils'
-SUBM = './submissions'
+MODELS = os.path.join('.', 'models')
+UTILS = os.path.join('.', 'utils')
+SUBM = os.path.join('.', 'submissions')
 
 
 # In[ ]:
