@@ -14,11 +14,17 @@ MLPClassifier((200, 50), learning_rate = 'adaptive', activation='logistic')
 save: fast. several kb
 
 
-
 LGBMClassifier
 0.6708703096377887
 10/10
 5min 21s
+save: fast. several mb
+
+
+Catboost('GPU')
+0.6702636928485025
+10/10
+8min
 save: fast. several mb
 
 

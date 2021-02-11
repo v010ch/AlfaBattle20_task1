@@ -15,8 +15,8 @@ from collections import Counter
 import pickle
 import gc
 
-from tqdm import tqdm
-tqdm.pandas()
+from tqdm.notebook import tqdm
+#tqdm.pandas()
 
 
 # In[2]:

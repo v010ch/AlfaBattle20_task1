@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[12]:
 
 
 import os
@@ -19,7 +19,7 @@ from tqdm.notebook import tqdm
 #tqdm.pandas()
 
 
-# In[2]:
+# In[13]:
 
 
 from sklearn.preprocessing import LabelBinarizer, OneHotEncoder
@@ -31,7 +31,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score, make_scorer
 
 
-# In[3]:
+# In[14]:
 
 
 from sklearn.linear_model import SGDClassifier
@@ -58,7 +58,7 @@ import xgboost as xgb
 
 
 
-# In[4]:
+# In[15]:
 
 
 DATA = os.path.join('.', 'data')
@@ -77,13 +77,13 @@ SUBM = os.path.join('.', 'submissions')
 
 # ## load data, features
 
-# In[5]:
+# In[16]:
 
 
 load_dtypes = pickle.load(open(os.path.join(UTILS, 'load_dtypes.pkl'), 'rb'))
 
 
-# In[6]:
+# In[17]:
 
 
 using_features = pickle.load(open(os.path.join(DATA_OWN, 'using_features.pkl'), 'rb'))
@@ -96,7 +96,7 @@ len(using_features)
 
 
 
-# In[7]:
+# In[18]:
 
 
 load_col = list(using_features)
@@ -109,26 +109,26 @@ load_col.extend(['client_pin', 'timestamp', 'multi_class_target'])
 
 
 
-# In[8]:
+# In[19]:
 
 
 get_ipython().run_cell_magic('time', '', "data_train = pd.read_csv(os.path.join(DATA_OWN, 'data_train.csv'), parse_dates=['timestamp'], usecols=load_col, dtype=load_dtypes)\n#data_train = pd.read_csv(os.path.join(DATA_OWN, 'data_train.csv'), usecols=load_col, dtype=load_dtypes)\ndata_train.head()")
 
 
-# In[9]:
+# In[20]:
 
 
 (data_train.isnull().values.any())
 
 
-# In[10]:
+# In[21]:
 
 
 target = data_train.multi_class_target
 data_train.drop('multi_class_target', axis = 1, inplace = True)
 
 
-# In[11]:
+# In[22]:
 
 
 get_ipython().run_cell_magic('time', '', 'X_train, X_val, y_train, y_val = train_test_split(data_train, target, test_size=0.33, random_state=42)\nX_train.shape, X_val.shape, y_train.shape, y_val.shape')
@@ -278,15 +278,22 @@ print(f1_score(y_val_int, pred_xgb, average  = 'micro'))
 
 
 
-# In[ ]:
+# In[30]:
 
 
 #%%time
-#clf_cb = CatBoostClassifier()
-#clf_cb.fit(X_train[using_features], y_train)
-#pred_cb = clf_cb.predict(X_val[using_features])
-#print(set(pred_cb))
-#print(f1_score(y_val, pred_cb, average  = 'micro'))
+clf_cb = CatBoostClassifier(task_type="GPU", #with gpu: 5 min vs 5 hour
+                            devices='0'
+                           )
+clf_cb.fit(X_train[using_features], y_train)
+
+
+# In[31]:
+
+
+pred_cb = clf_cb.predict(X_val[using_features])
+print(set(pred_cb.reshape(-1)))
+print(f1_score(y_val, pred_cb, average  = 'micro'))
 
 
 # In[ ]:
@@ -386,10 +393,14 @@ clf_lgbm = LGBMClassifier( silent = False) # loss = ‘hinge’
 clf_lgbm.fit(data_train[using_features], target)
 
 
-# In[ ]:
+# In[32]:
 
 
-
+#%%time
+clf_cb = CatBoostClassifier(task_type="GPU", #with gpu: 10 min vs ?? hour
+                            devices='0'
+                           )
+clf_cb.fit(data_train[using_features], target)
 
 
 # In[ ]:
@@ -415,7 +426,7 @@ get_ipython().run_cell_magic('time', '', 'xgb_params = {\n    \'tree_method\':\'
 # In[ ]:
 
 
-get_ipython().run_cell_magic('time', '', "pickle.dump(clf_sgd_hinge, open(os.path.join(MODELS, 'clf_sgd.pkl'), 'wb'))\npickle.dump(clf_mlp, open(os.path.join(MODELS, 'clf_mlp.pkl'), 'wb'))\npickle.dump(clf_lr, open(os.path.join(MODELS, 'clf_lr.pkl'), 'wb'))\npickle.dump(clf_lgbm, open(os.path.join(MODELS, 'clf_lgbm.pkl'), 'wb'))\n\nmodel_xgb.save_model(os.path.join(MODELS, 'clf_xgb.json')\n#clf_cb.save_model(os.path.join(MODELS, 'clf_cb.cbm'), format='cbm')\n\n\n#lgb.save(clf_lgbm, os.path.join(MODELS, 'clf_lgbm.lgb'), num_iteration = NULL)\n#clf_lgbm.save_model(os.path.join(MODELS, 'clf_lgbm.txt'))\n\n#pickle.dump(clf_lrsvc, open(os.path.join(MODELS, 'clf_lrsvc.pkl'), 'wb'))\n#pickle.dump(clf_svc, open(os.path.join(MODELS, 'clf_svc.pkl'), 'wb'))\n#pickle.dump(clf_rf,  open(os.path.join(MODELS, 'clf_rf.pkl'),  'wb'))\n\n\npickle.dump(clf_lgbm, open(os.path.join(MODELS, 'clf_lgbm.pkl'), 'wb'))")
+get_ipython().run_cell_magic('time', '', "pickle.dump(clf_sgd_hinge, open(os.path.join(MODELS, 'clf_sgd.pkl'), 'wb'))\npickle.dump(clf_mlp, open(os.path.join(MODELS, 'clf_mlp.pkl'), 'wb'))\npickle.dump(clf_lr, open(os.path.join(MODELS, 'clf_lr.pkl'), 'wb'))\npickle.dump(clf_lgbm, open(os.path.join(MODELS, 'clf_lgbm.pkl'), 'wb'))\n\n#lgb.save(clf_lgbm, os.path.join(MODELS, 'clf_lgbm.lgb'), num_iteration = NULL)\n#clf_lgbm.save_model(os.path.join(MODELS, 'clf_lgbm.txt'))\n\n#pickle.dump(clf_lrsvc, open(os.path.join(MODELS, 'clf_lrsvc.pkl'), 'wb'))\n#pickle.dump(clf_svc, open(os.path.join(MODELS, 'clf_svc.pkl'), 'wb'))\n#pickle.dump(clf_rf,  open(os.path.join(MODELS, 'clf_rf.pkl'),  'wb'))\n\n\npickle.dump(clf_lgbm, open(os.path.join(MODELS, 'clf_lgbm.pkl'), 'wb'))")
 
 
 # In[ ]:
@@ -424,10 +435,10 @@ get_ipython().run_cell_magic('time', '', "pickle.dump(clf_sgd_hinge, open(os.pat
 model_xgb.save_model(os.path.join(MODELS, 'clf_xgb.json'))
 
 
-# In[ ]:
+# In[33]:
 
 
-
+clf_cb.save_model(os.path.join(MODELS, 'clf_cb.cbm'), format='cbm')
 
 
 # In[ ]:
